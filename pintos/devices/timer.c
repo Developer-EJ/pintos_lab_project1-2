@@ -36,7 +36,7 @@ void
 timer_init (void) {
 	/* 8254 input frequency divided by TIMER_FREQ, rounded to
 	   nearest. */
-	uint16_t count = (1193180 + TIMER_FREQ / 2) / TIMER_FREQ;
+	uint16_t count = (1193180 + TIMER_FREQ / 2) / TIMER_FREQ;      // 100tick에 1초 발생시킴
 
 	outb (0x43, 0x34);    /* CW: counter 0, LSB then MSB, mode 2, binary. */
 	outb (0x40, count & 0xff);
@@ -71,9 +71,10 @@ timer_calibrate (void) {
 }
 
 /* Returns the number of timer ticks since the OS booted. */
+/* 현재 시간 알기 위한 함수  */
 int64_t
 timer_ticks (void) {
-	enum intr_level old_level = intr_disable ();
+	enum intr_level old_level = intr_disable ();      // disable인지 아닌지 모르기 때문에 old_level 변수에 저장 
 	int64_t t = ticks;
 	intr_set_level (old_level);
 	barrier ();
@@ -122,6 +123,7 @@ timer_print_stats (void) {
 }
 
 /* Timer interrupt handler. */
+/* 시간이 자난 것을 확인 가능 */
 static void
 timer_interrupt (struct intr_frame *args UNUSED) {
 	ticks++;
