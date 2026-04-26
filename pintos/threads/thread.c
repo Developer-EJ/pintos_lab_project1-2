@@ -92,6 +92,8 @@ static uint64_t gdt[3] = { 0, 0x00af9a000000ffff, 0x00cf92000000ffff };
 
    It is not safe to call thread_current() until this function
    finishes. */
+
+/* main()에 의해 호출되어 스레드 시스템을 초기화 -> Pintos의 초기 스레드를 위한 struct thread를 생성 */
 void
 thread_init (void) {
 	ASSERT (intr_get_level () == INTR_OFF);
@@ -119,6 +121,8 @@ thread_init (void) {
 
 /* Starts preemptive thread scheduling by enabling interrupts.
    Also creates the idle thread. */
+
+/* main()에 의해 호출되어 스케줄러 시작 */
 void
 thread_start (void) {
 	/* Create the idle thread. */
@@ -135,6 +139,8 @@ thread_start (void) {
 
 /* Called by the timer interrupt handler at each timer tick.
    Thus, this function runs in an external interrupt context. */
+
+/* 타이머가 작동할 때마다 타이머 인터럽트에 의해 호출됨 */
 void
 thread_tick (void) {
 	struct thread *t = thread_current ();
@@ -462,6 +468,8 @@ do_iret (struct intr_frame *tf) {
    It's not safe to call printf() until the thread switch is
    complete.  In practice that means that printf()s should be
    added at the end of the function. */
+
+/* context switching 시에는 현재 실행 중인 스레드의 상태가 저장되고, 대신 전환하려는 스레드의 상태를 다시 불러옴*/
 static void
 thread_launch (struct thread *th) {
 	uint64_t tf_cur = (uint64_t) &running_thread ()->tf;
