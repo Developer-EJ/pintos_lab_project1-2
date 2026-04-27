@@ -274,14 +274,21 @@ thread_wake_tick_compare(const struct list_elem *target, const struct list_elem 
 void thread_unblock(struct thread *t)
 {
 	enum intr_level old_level;
+	struct thread *current_thread = thread_current();
 
 	ASSERT(is_thread(t));
 	old_level = intr_disable();
 	ASSERT(t->status == THREAD_BLOCKED);
+	// 우선순위로 정렬하여 insert
 	list_insert_ordered(&ready_list, &t->elem, thread_priority_compare, NULL);
-	// list_push_back (&ready_list, &t->elem);
 	t->status = THREAD_READY;
 	intr_set_level(old_level);
+
+	// 만약 ready_list에 넣는 스레드의 우선순위가 더 높다면, 양보
+	if (current_thread->priority < t->priority)
+	{
+		thread_yield();
+	}
 }
 
 void thread_wakeup(int64_t timer_tick)
@@ -376,7 +383,9 @@ void thread_yield(void)
 
 	old_level = intr_disable();
 	if (curr != idle_thread)
-		list_push_back(&ready_list, &curr->elem);
+		list_insert_ordered(&ready_list, &curr->elem, thread_priority_compare, NULL);
+	// list_push_back(&ready_list, &curr->elem); legacy 코드
+
 	do_schedule(THREAD_READY);
 	intr_set_level(old_level);
 }
