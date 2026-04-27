@@ -238,10 +238,13 @@ void thread_sleep(int64_t wake_tick)
 	struct thread *cur = thread_current();
 	enum intr_level old_level;
 
+	// 인터럽트 핸들러 안에서 시행중인지 검사
 	ASSERT(!intr_context());
 
-	cur->wake_tick = wake_tick;
+	// 인터럽트를 비활성화 하면서, 이전 인터럽트 저장
 	old_level = intr_disable();
+	// 현재 스레드 wake_tick 갱신
+	cur->wake_tick = wake_tick;
 	list_insert_ordered(&sleep_list, &cur->elem, thread_wake_tick_compare, NULL);
 	thread_block();
 	intr_set_level(old_level);
@@ -281,7 +284,7 @@ void thread_unblock(struct thread *t)
 	intr_set_level(old_level);
 }
 
-void thread_wakeup(int64_t wake_up_ticks)
+void thread_wakeup(int64_t timer_tick)
 {
 	struct list_elem *sp;
 	while (!list_empty(&sleep_list))
@@ -290,7 +293,7 @@ void thread_wakeup(int64_t wake_up_ticks)
 		struct thread *sleep_thread = list_entry(sp, struct thread, elem);
 		int64_t wake_tick = sleep_thread->wake_tick;
 		// 현재 스레드와 sleep_list 내의 비교 스레드 wake_tick 비교
-		if (wake_tick <= wake_up_ticks)
+		if (wake_tick <= timer_tick)
 		{
 			list_pop_front(&sleep_list);
 			thread_unblock(sleep_thread);
