@@ -215,7 +215,9 @@ tid_t thread_create(const char *name, int priority,
 
 	/* Add to run queue. */
 	thread_unblock(t);
-
+	//새 스레드 priority > 현재 스레드 priority면 즉시 thread_yield()
+	if (thread_current()->priority < priority)
+		thread_yield();
 	return tid;
 }
 
@@ -373,10 +375,11 @@ void thread_yield(void)
 	enum intr_level old_level;
 
 	ASSERT(!intr_context());
-
+//push_back 대신 priority 순서대로 다시 넣어야 함
 	old_level = intr_disable();
 	if (curr != idle_thread)
-		list_push_back(&ready_list, &curr->elem);
+		// list_push_back(&ready_list, &curr->elem);
+		list_insert_ordered(&ready_list, &curr->elem, thread_priority_compare, NULL);
 	do_schedule(THREAD_READY);
 	intr_set_level(old_level);
 }
@@ -385,7 +388,15 @@ void thread_yield(void)
 void thread_set_priority(int new_priority)
 {
 	thread_current()->priority = new_priority;
+	//새 스레드 priority > 현재 스레드 priority면 즉시 thread_yield()
+	if (list_empty(&ready_list)== false)
+	{
+		struct thread *r_thread = list_entry(list_front(&ready_list), struct thread, elem); // ready_list의 가장 앞에 있는 스레드 (가장 높은 우선순위)
+		if (thread_current()->priority < r_thread->priority)
+			thread_yield();
+	}
 }
+
 
 /* Returns the current thread's priority. */
 int thread_get_priority(void)
