@@ -33,8 +33,8 @@ struct condition {
 	struct list waiters;        /* List of waiting threads. */
 };
 
-void cond_init (struct condition *);
-void cond_wait (struct condition *, struct lock *);
+void cond_init (struct condition *);                     // cond를 새로운 조건 변수로 초기화
+void cond_wait (struct condition *, struct lock *);      //
 void cond_signal (struct condition *, struct lock *);
 void cond_broadcast (struct condition *, struct lock *);
 
