@@ -66,10 +66,6 @@ static void schedule(void);
 static tid_t allocate_tid(void);
 // thread sleep 전환 메서드
 void thread_sleep(int64_t wake_tick);
-// 스레드 우선순위 비교 메서드
-static bool thread_priority_compare(const struct list_elem *target, const struct list_elem *compare, void *aux);
-// 스레드 wake_tick 비교 메서드
-static bool thread_wake_tick_compare(const struct list_elem *target, const struct list_elem *compare, void *aux);
 
 /* Returns true if T appears to point to a valid thread. */
 #define is_thread(t) ((t) != NULL && (t)->magic == THREAD_MAGIC)
@@ -215,6 +211,15 @@ tid_t thread_create(const char *name, int priority,
 
 	/* Add to run queue. */
 	thread_unblock(t);
+	// 만약 ready_list에 넣는 스레드의 우선순위가 더 높다면, 양보
+	if (thread_current()->priority < t->priority)
+	{
+		// thread_wake 함수는 타이머 인터럽트에서 실행됨!!
+		if (intr_context() == false)
+			thread_yield();
+		else
+			intr_yield_on_return();
+	}
 
 	return tid;
 }
@@ -250,8 +255,7 @@ void thread_sleep(int64_t wake_tick)
 	intr_set_level(old_level);
 }
 
-static bool
-thread_wake_tick_compare(const struct list_elem *target, const struct list_elem *compare, void *aux)
+bool thread_wake_tick_compare(const struct list_elem *target, const struct list_elem *compare, void *aux)
 {
 	struct thread *thread_target = list_entry(target, struct thread, elem);
 	struct thread *thread_compare = list_entry(compare, struct thread, elem);
@@ -283,12 +287,6 @@ void thread_unblock(struct thread *t)
 	list_insert_ordered(&ready_list, &t->elem, thread_priority_compare, NULL);
 	t->status = THREAD_READY;
 	intr_set_level(old_level);
-
-	// 만약 ready_list에 넣는 스레드의 우선순위가 더 높다면, 양보
-	if (current_thread->priority < t->priority)
-	{
-		thread_yield();
-	}
 }
 
 void thread_wakeup(int64_t timer_tick)
@@ -304,14 +302,22 @@ void thread_wakeup(int64_t timer_tick)
 		{
 			list_pop_front(&sleep_list);
 			thread_unblock(sleep_thread);
+			// 만약 ready_list에 넣는 스레드의 우선순위가 더 높다면, 양보
+			if (thread_current()->priority < sleep_thread->priority)
+			{
+				// thread_wake 함수는 타이머 인터럽트에서 실행됨!!
+				if (intr_context() == false)
+					thread_yield();
+				else
+					intr_yield_on_return();
+			}
 		}
 		else
 			break;
 	}
 }
 
-static bool
-thread_priority_compare(const struct list_elem *target, const struct list_elem *compare, void *aux)
+bool thread_priority_compare(const struct list_elem *target, const struct list_elem *compare, void *aux)
 {
 	struct thread *thread_target = list_entry(target, struct thread, elem);
 	struct thread *thread_compare = list_entry(compare, struct thread, elem);
@@ -379,8 +385,6 @@ void thread_yield(void)
 	struct thread *curr = thread_current();
 	enum intr_level old_level;
 
-	ASSERT(!intr_context());
-
 	old_level = intr_disable();
 	if (curr != idle_thread)
 		list_insert_ordered(&ready_list, &curr->elem, thread_priority_compare, NULL);
@@ -394,6 +398,15 @@ void thread_yield(void)
 void thread_set_priority(int new_priority)
 {
 	thread_current()->priority = new_priority;
+
+	// ready_list의 가장 높은 우선순위와 비교
+	// 현재 스레드가 더 낮으면 양보
+	if (!list_empty(&ready_list))
+	{
+		struct thread *front_thread = list_entry(list_front(&ready_list), struct thread, elem);
+		if (front_thread->priority > new_priority)
+			thread_yield();
+	}
 }
 
 /* Returns the current thread's priority. */
