@@ -276,12 +276,15 @@ thread_wake_tick_compare(const struct list_elem *target, const struct list_elem 
 void thread_unblock(struct thread *t)
 {
 	enum intr_level old_level;
-
+	
 	ASSERT(is_thread(t));
 	old_level = intr_disable();
 	ASSERT(t->status == THREAD_BLOCKED);
 	list_insert_ordered(&ready_list, &t->elem, thread_priority_compare, NULL);
 	// list_push_back (&ready_list, &t->elem);
+
+	//높은 priority가 앞에 오게 ready list에 넣는다
+	
 	t->status = THREAD_READY;
 	intr_set_level(old_level);
 }
