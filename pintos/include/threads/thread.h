@@ -132,6 +132,8 @@ void thread_sleep(int64_t wake_tick);
 // sleep_list 순회하며 unblock
 void thread_wakeup(int64_t wake_ticks);
 
+bool thread_priority_compare(const struct list_elem *target, const struct list_elem *compare, void *aux);
+
 struct thread *thread_current(void);
 tid_t thread_tid(void);
 const char *thread_name(void);
