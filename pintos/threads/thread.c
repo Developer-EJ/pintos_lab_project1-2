@@ -397,7 +397,11 @@ void thread_yield(void)
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void thread_set_priority(int new_priority)
 {
-	thread_current()->priority = new_priority;
+	struct thread *cur = thread_current();
+	cur->init_priority = new_priority;
+
+	if (list_empty(&cur->donate_threads) || new_priority > cur->priority)
+		cur->priority = new_priority;
 
 	// ready_list의 가장 높은 우선순위와 비교
 	// 현재 스레드가 더 낮으면 양보
@@ -506,7 +510,11 @@ init_thread(struct thread *t, const char *name, int priority)
 	strlcpy(t->name, name, sizeof t->name);
 	t->tf.rsp = (uint64_t)t + PGSIZE - sizeof(void *);
 	t->priority = priority;
+	t->init_priority = priority;
 	t->magic = THREAD_MAGIC;
+
+	t->waiting_lock = NULL;
+	list_init(&t->donate_threads);
 }
 
 /* Chooses and returns the next thread to be scheduled.  Should

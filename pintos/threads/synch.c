@@ -113,9 +113,9 @@ void sema_up(struct semaphore *sema)
 	struct thread *front_thread = NULL;
 
 	ASSERT(sema != NULL);
-	sema->value++;
 
 	old_level = intr_disable();
+	sema->value++;
 	if (!list_empty(&sema->waiters))
 	{
 		// waiters 리스트에서 제거 후, ready_list에 추가
@@ -206,8 +206,43 @@ void lock_acquire(struct lock *lock)
 	ASSERT(!intr_context());
 	ASSERT(!lock_held_by_current_thread(lock));
 
+	struct thread *cur = thread_current();
+	// 1. 현재 스레드의 대기 락을 지정
+	cur->waiting_lock = lock;
+	// 2. 이미 holder가 있다면 priority 양보
+	if (lock->holder)
+		donate_priority(lock);
+
 	sema_down(&lock->semaphore);
-	lock->holder = thread_current();
+	// disable
+	cur->waiting_lock = NULL;
+	lock->holder = cur;
+	// 해제
+}
+
+void donate_priority(struct lock *lock)
+{
+	struct thread *cur = thread_current();
+	struct thread *holder = lock->holder;
+
+	// 1. holder의 donate 스레드 목록에, 현재 스레드 elem insert
+	list_push_back(&holder->donate_threads, &cur->donate_threads_elem);
+	// 2. nested donation을 구현하기 위한 연쇄 전달
+	// 최대 8 depth 까지 (무한루프 방지)
+	for (int depth = 0; depth < 8 && holder != NULL; depth++)
+	{
+		// holder의 priority가 더 크면 stop
+		if (holder->priority >= cur->priority)
+			break;
+		// 3. 현재 스레드의 우선순위를 holder에 전달
+		holder->priority = cur->priority;
+
+		// 만약 holder가 기다리는 lock이 없으면 stop
+		if (holder->waiting_lock == NULL)
+			break;
+		// 4. 현재 락을 쥐고 있는 스레드가 기다리고 있는 락을 쥐고 있는 스레드로 이동
+		holder = holder->waiting_lock->holder;
+	}
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -239,8 +274,32 @@ void lock_release(struct lock *lock)
 {
 	ASSERT(lock != NULL);
 	ASSERT(lock_held_by_current_thread(lock));
-
+	struct thread *cur = thread_current();
+	// 1. 이 락을 기다리면서 현재 스레드에 기부해준 스레드들을 donate_thread에서 제거
+	struct list_elem *e;
+	for (e = list_begin(&lock->semaphore.waiters);
+		 e != list_end(&lock->semaphore.waiters);
+		 e = list_next(e))
+	{
+		struct thread *t = list_entry(e, struct thread, elem);
+		list_remove(&t->donate_threads_elem);
+	}
+	// 2. 우선순위 재계산
+	// 만약 donate_threads가 비어 있으면 초기 priority로 초기화
+	if (list_empty(&cur->donate_threads))
+	{
+		cur->priority = cur->init_priority;
+	}
+	// donate_threads 내 가장 높은 우선순위로 초기화
+	else
+	{
+		struct list_elem *max_priority_elem = list_max(&cur->donate_threads, thread_priority_compare, NULL);
+		struct thread *max_thread = list_entry(max_priority_elem, struct thread, donate_threads_elem);
+		cur->priority = max_thread->priority;
+	}
+	// 3. 현재 lock holder를 비우기
 	lock->holder = NULL;
+	// 4. lock value++
 	sema_up(&lock->semaphore);
 }
 
