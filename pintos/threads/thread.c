@@ -67,7 +67,7 @@ static tid_t allocate_tid(void);
 // thread sleep 전환 메서드
 void thread_sleep(int64_t wake_tick);
 // 스레드 우선순위 비교 메서드
-static bool thread_priority_compare(const struct list_elem *target, const struct list_elem *compare, void *aux);
+// static bool thread_priority_compare(const struct list_elem *target, const struct list_elem *compare, void *aux);
 // 스레드 wake_tick 비교 메서드
 static bool thread_wake_tick_compare(const struct list_elem *target, const struct list_elem *compare, void *aux);
 
@@ -304,7 +304,7 @@ void thread_wakeup(int64_t wake_up_ticks)
 	}
 }
 
-static bool
+bool
 thread_priority_compare(const struct list_elem *target, const struct list_elem *compare, void *aux)
 {
 	struct thread *thread_target = list_entry(target, struct thread, elem);
@@ -385,22 +385,21 @@ void thread_yield(void)
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void thread_set_priority(int new_priority)
 {
-	struct list_elem *front;
 	enum intr_level old_level;
 	bool need_yield = false;
 
-    old_level = intr_disable();
-
+	old_level = intr_disable();
 	thread_current()->priority = new_priority;
 
 	if (!list_empty(&ready_list)){
-		front = list_front(&ready_list);
+		struct list_elem *front = list_front(&ready_list);
 		struct thread *compare_thread = list_entry(front, struct thread, elem);
 		if (thread_current()->priority < compare_thread->priority){
 			need_yield = true;
 		}
 	}
 	intr_set_level(old_level);
+
 	if (need_yield){
 		thread_yield();
 	}

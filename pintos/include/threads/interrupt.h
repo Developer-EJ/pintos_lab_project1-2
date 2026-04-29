@@ -10,10 +10,10 @@ enum intr_level {
 	INTR_ON               /* Interrupts enabled. */
 };
 
-enum intr_level intr_get_level (void);
-enum intr_level intr_set_level (enum intr_level);
-enum intr_level intr_enable (void);
-enum intr_level intr_disable (void);
+enum intr_level intr_get_level (void);              // 현재 인터럽트 상태 반환
+enum intr_level intr_set_level (enum intr_level);   // 인터럽트 상태를 원하는 값으로 바꾸고, 이전 상태 반환
+enum intr_level intr_enable (void);                 // 인터럽트 활성화, 이전 인터럽트 상태 복원
+enum intr_level intr_disable (void);                // 중단 기능 끔
 
 /* Interrupt stack frame. */
 struct gp_registers {
