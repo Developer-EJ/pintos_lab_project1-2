@@ -96,8 +96,8 @@ struct thread
 	struct lock *waiting_lock;	// 현재 스레드가 기다리는 lock
 	struct list donate_threads; // 나에게 priority를 기부한 스레드들 목록
 	// 기상 tick
-	int64_t wake_tick;
-	/* Shared between thread.c and synch.c. */
+	int64_t wake_tick; /* Shared between thread.c and synch.c. */
+
 	struct list_elem elem;				  /* List element. */
 	struct list_elem donate_threads_elem; // donate_threads 리스트에 들어갈 때 쓰는 노드
 

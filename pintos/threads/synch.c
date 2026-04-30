@@ -69,8 +69,7 @@ void sema_down(struct semaphore *sema)
 	old_level = intr_disable();
 	while (sema->value == 0)
 	{
-		// list_push_back(&sema->waiters, &thread_current()->elem);
-		list_insert_ordered(&sema->waiters, &thread_current()->elem, thread_priority_compare, NULL);
+		list_push_back(&sema->waiters, &thread_current()->elem);
 		thread_block();
 	}
 	sema->value--;
@@ -118,8 +117,9 @@ void sema_up(struct semaphore *sema)
 	sema->value++;
 	if (!list_empty(&sema->waiters))
 	{
-		// waiters 리스트에서 제거 후, ready_list에 추가
-		front_elem = list_pop_front(&sema->waiters);
+		// watiers 내에 우선순위가 가장 높은 elem 선택 후, 제거
+		front_elem = list_max(&sema->waiters, thread_priority_compare, NULL);
+		list_remove(front_elem);
 		front_thread = list_entry(front_elem, struct thread, elem);
 		thread_unblock(front_thread);
 		if (thread_current()->priority < front_thread->priority)
@@ -130,6 +130,7 @@ void sema_up(struct semaphore *sema)
 				intr_yield_on_return();
 		}
 	}
+
 	intr_set_level(old_level);
 }
 
@@ -214,10 +215,8 @@ void lock_acquire(struct lock *lock)
 		donate_priority(lock);
 
 	sema_down(&lock->semaphore);
-	// disable
 	cur->waiting_lock = NULL;
 	lock->holder = cur;
-	// 해제
 }
 
 void donate_priority(struct lock *lock)

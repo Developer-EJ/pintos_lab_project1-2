@@ -1,8 +1,8 @@
 {
   "threads": {
     "tests/threads/alarm-priority": {
-      "count": 1,
-      "last_used": 1777426788.342,
+      "count": 4,
+      "last_used": 1777561757.047,
       "last_action": "run"
     },
     "tests/threads/priority-donate-one": {
@@ -11,9 +11,9 @@
       "last_action": "run"
     },
     "tests/threads/priority-donate-multiple": {
-      "count": 2,
-      "last_used": 1777460495.306,
-      "last_action": "run"
+      "count": 3,
+      "last_used": 1777535761.981,
+      "last_action": "debug"
     },
     "tests/threads/priority-donate-multiple2": {
       "count": 2,
@@ -21,48 +21,48 @@
       "last_action": "run"
     },
     "tests/threads/priority-donate-chain": {
-      "count": 2,
-      "last_used": 1777460550.5,
+      "count": 5,
+      "last_used": 1777561735.531,
       "last_action": "run"
     },
     "tests/threads/priority-donate-nest": {
-      "count": 3,
-      "last_used": 1777460507.806,
+      "count": 5,
+      "last_used": 1777560187.69,
       "last_action": "run"
     },
     "tests/threads/priority-donate-lower": {
-      "count": 2,
-      "last_used": 1777460519.855,
+      "count": 5,
+      "last_used": 1777559797.007,
       "last_action": "run"
     },
     "tests/threads/priority-donate-sema": {
-      "count": 4,
-      "last_used": 1777460512.703,
+      "count": 13,
+      "last_used": 1777561718.439,
       "last_action": "run"
     },
     "tests/threads/priority-fifo": {
-      "count": 3,
-      "last_used": 1777460526.528,
+      "count": 14,
+      "last_used": 1777479715.324,
       "last_action": "run"
     },
     "tests/threads/priority-preempt": {
-      "count": 2,
-      "last_used": 1777460534.94,
+      "count": 4,
+      "last_used": 1777468483.034,
       "last_action": "run"
     },
     "tests/threads/priority-condvar": {
-      "count": 2,
-      "last_used": 1777460554.324,
+      "count": 3,
+      "last_used": 1777468864.928,
       "last_action": "run"
     },
     "tests/threads/priority-change": {
-      "count": 2,
-      "last_used": 1777460470.6,
-      "last_action": "run"
+      "count": 3,
+      "last_used": 1777535829.21,
+      "last_action": "debug"
     },
     "tests/threads/priority-sema": {
-      "count": 3,
-      "last_used": 1777460763.94,
+      "count": 6,
+      "last_used": 1777556465.619,
       "last_action": "run"
     }
   }
