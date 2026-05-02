@@ -160,7 +160,7 @@ error:
 
 /* Switch the current execution context to the f_name.
  * Returns -1 on fail. */
-int
+int //여기에서 f_name이지만, 파일이름이랑, 인자들까지 모두 넘어왔음
 process_exec (void *f_name) {
 	char *file_name = f_name;
 	bool success;
@@ -168,7 +168,7 @@ process_exec (void *f_name) {
 	/* We cannot use the intr_frame in the thread structure.
 	 * This is because when current thread rescheduled,
 	 * it stores the execution information to the member. */
-	struct intr_frame _if;
+	struct intr_frame _if; //유저모드로 가기 위한 cpu 정보들을 담는 구조체
 	_if.ds = _if.es = _if.ss = SEL_UDSEG;
 	_if.cs = SEL_UCSEG;
 	_if.eflags = FLAG_IF | FLAG_MBS;
@@ -176,8 +176,10 @@ process_exec (void *f_name) {
 	/* We first kill the current context */
 	process_cleanup ();
 
+	//filename이랑, 인자랑 나누어야 하는데, 어디서 남?
+
 	/* And then load the binary */
-	success = load (file_name, &_if);
+	success = load (file_name, &_if); // 여기에서 파일의 이름만 넣어야 해
 
 	/* If load failed, quit. */
 	palloc_free_page (file_name);
@@ -204,6 +206,13 @@ process_wait (tid_t child_tid UNUSED) {
 	/* XXX: Hint) The pintos exit if process_wait (initd), we recommend you
 	 * XXX:       to add infinite loop here before
 	 * XXX:       implementing the process_wait. */
+
+	//여기에서 main thread가 멈추지 않도록 해야 해
+	intr_disable();
+	while (true) {
+		thread_block();
+	}
+
 	return -1;
 }
 
@@ -335,8 +344,13 @@ load (const char *file_name, struct intr_frame *if_) {
 		goto done;
 	process_activate (thread_current ());
 
+	//파일이름만 떼서 파일 오픈. 인자들은 아래에서 잘라 쓰기
+	char *save_ptr;
+	char *only_file_name = strtok_r(file_name, " ", &save_ptr);
+	char *token = strtok_r(file_name, " ", &save_ptr); //인자의 첫 토큰
+
 	/* Open executable file. */
-	file = filesys_open (file_name);
+	file = filesys_open (only_file_name); //여기에서 파일이름만 넣어줘야 함, 나머지는 user stack에 저장
 	if (file == NULL) {
 		printf ("load: %s: open failed\n", file_name);
 		goto done;
@@ -416,6 +430,10 @@ load (const char *file_name, struct intr_frame *if_) {
 
 	/* TODO: Your code goes here.
 	 * TODO: Implement argument passing (see project2/argument_passing.html). */
+	//인자의 토큰이 NULL이 아닐 때까지 반복
+	 while (token != NULL) {
+		//스택에 집어넣기.
+	}
 
 	success = true;
 
