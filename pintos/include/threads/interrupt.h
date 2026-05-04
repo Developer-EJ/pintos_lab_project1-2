@@ -25,26 +25,27 @@ struct gp_registers {
 	uint64_t r10;
 	uint64_t r9;
 	uint64_t r8;
-	uint64_t rsi;
-	uint64_t rdi;
+	uint64_t rsi; //
+	uint64_t rdi; //
 	uint64_t rbp;
-	uint64_t rdx;
+	uint64_t rdx; //
 	uint64_t rcx;
 	uint64_t rbx;
-	uint64_t rax;
+	uint64_t rax; //
 } __attribute__((packed));
 
 struct intr_frame {
 	/* Pushed by intr_entry in intr-stubs.S.
 	   These are the interrupted task's saved registers. */
-	struct gp_registers R;
-	uint16_t es;
+	struct gp_registers R; //general purpose, CPU가 자동으로 저장하지 않음
+	uint16_t es; //추가 데이터 세그먼트
 	uint16_t __pad1;
 	uint32_t __pad2;
-	uint16_t ds;
+	uint16_t ds; //일반 데이터 주소의 세그먼트. 옛날에 cpu는 DS:주소로 접근
 	uint16_t __pad3;
 	uint32_t __pad4;
 	/* Pushed by intrNN_stub in intr-stubs.S. */
+	//어떤 인터럽트를 호출할지 정하는 번호
 	uint64_t vec_no; /* Interrupt vector number. */
 /* Sometimes pushed by the CPU,
    otherwise for consistency pushed as 0 by intrNN_stub.
@@ -52,16 +53,17 @@ struct intr_frame {
 	uint64_t error_code;
 /* Pushed by the CPU.
    These are the interrupted task's saved registers. */
-	uintptr_t rip;
-	uint16_t cs;
-	uint16_t __pad5;
+	uintptr_t rip;		//instruction pointer
+	uint16_t cs;   		//code segment. user 코드였는지, kernel 코드였는지 저장
+	//옛날에 cpu가 명령어를 가져올 때 CS:RIP로 찾음
+	uint16_t __pad5;	
 	uint32_t __pad6;
-	uint64_t eflags;
-	uintptr_t rsp;
-	uint16_t ss;
+	uint64_t eflags;	//cpu flag. ZF, CF, IF, DF
+	uintptr_t rsp;		//stack pointer
+	uint16_t ss;		//stack segment. 옛날에 SS:RSP, SS:RBP로 접근
 	uint16_t __pad7;
 	uint32_t __pad8;
-} __attribute__((packed));
+} __attribute__((packed)); //컴파일러가 정렬 패딩을 넣으면 안됨
 
 typedef void intr_handler_func (struct intr_frame *);
 

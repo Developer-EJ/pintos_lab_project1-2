@@ -65,5 +65,17 @@
       "last_used": 1777556465.619,
       "last_action": "run"
     }
+  },
+  "userprog": {
+    "tests/userprog/args-none": {
+      "count": 17,
+      "last_used": 1777895978.327,
+      "last_action": "run"
+    },
+    "tests/userprog/args-single": {
+      "count": 6,
+      "last_used": 1777895972.608,
+      "last_action": "run"
+    }
   }
 }
