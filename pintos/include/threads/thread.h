@@ -104,6 +104,10 @@ struct thread
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
 	uint64_t *pml4; /* Page map level 4 */
+	/* TODO: Project 2 (args-none): add per-process exit status here.
+	 * TODO: Later, extend this area with parent/child wait bookkeeping. */
+	int exit_status;
+	
 #endif
 #ifdef VM
 	/* Table for whole virtual memory owned by thread. */

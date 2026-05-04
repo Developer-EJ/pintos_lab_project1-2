@@ -40,7 +40,11 @@ syscall_init (void) {
 /* The main system call interface */
 void
 syscall_handler (struct intr_frame *f UNUSED) {
-	// TODO: Your implementation goes here.
+	/* TODO: Project 2 (args-none) minimum:
+	 * TODO: 1) read the syscall number from f->R.rax
+	 * TODO: 2) implement SYS_WRITE for fd == 1 using putbuf()
+	 * TODO: 3) implement SYS_EXIT and save the exit status
+	 * TODO: 4) return values through f->R.rax when needed */
 	printf ("system call!\n");
 	thread_exit ();
 }

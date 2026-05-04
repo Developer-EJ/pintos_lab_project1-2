@@ -164,6 +164,9 @@ int
 process_exec (void *f_name) {
 	char *file_name = f_name;
 	bool success;
+	/* TODO: Project 2 (args-none): keep the full command line here.
+	 * TODO: load() should open only argv[0], but argument passing
+	 * TODO: still needs the whole string to build the user stack. */
 
 	/* We cannot use the intr_frame in the thread structure.
 	 * This is because when current thread rescheduled,
@@ -212,10 +215,13 @@ void
 process_exit (void) {
 	struct thread *curr = thread_current ();
 	/* TODO: Your code goes here.
-	 * TODO: Implement process termination message (see
-	 * TODO: project2/process_termination.html).
+	 * TODO: args-none minimum:
+	 * TODO: 1) print "<process-name>: exit(<status>)"
+	 * TODO: 2) use the per-process exit status saved by SYS_EXIT
+	 * TODO: 3) then continue with resource cleanup
 	 * TODO: We recommend you to implement process resource cleanup here. */
-
+	
+	 printf("%s: exit(%d)\n", curr->name, curr->exit_status);
 	process_cleanup ();
 }
 
@@ -327,7 +333,39 @@ load (const char *file_name, struct intr_frame *if_) {
 	struct file *file = NULL;
 	off_t file_ofs;
 	bool success = false;
+	/* 전체 command line을 보관할 복사본이다.
+	 * 실행 파일 이름 분리와 인자 파싱에 함께 사용한다. */
+	char *cmd_line = NULL;
+	// argv는 커널에서 임시로 토큰을 저장하는 배열
+	char *argv[64];
+	// argv_addr는 user stack에 문자열을 복사한 뒤의 유저 주소를 저장
+	char *argv_addr[64];
+	char *save_ptr;
+	char *token;
+	int argc = 0;
 	int i;
+
+	/* command line을 수정하며 strtok_r()로 파싱할 것이므로
+	 * 먼저 페이지 단위 복사본을 만들어 둔다. */
+	cmd_line = palloc_get_page (0);
+	if (cmd_line == NULL)
+		goto done;
+	strlcpy (cmd_line, file_name, PGSIZE);
+
+	/* 공백 기준으로 토큰화해서 argv[]와 argc를 먼저 만든다.
+	 * 이 시점의 포인터들은 모두 커널 주소이므로 나중에 그대로 넘기면 안 된다. */
+	for (token = strtok_r (cmd_line, " ", &save_ptr);
+			token != NULL;
+			token = strtok_r (NULL, " ", &save_ptr))
+		{
+			if (argc >= (int) (sizeof argv / sizeof argv[0]))
+				goto done;
+			argv[argc++] = token;
+		}
+
+	/* 실행 파일 이름조차 없는 빈 command line은 실패 처리한다. */
+	if (argc == 0)
+		goto done;
 
 	/* Allocate and activate page directory. */
 	t->pml4 = pml4_create ();
@@ -336,9 +374,11 @@ load (const char *file_name, struct intr_frame *if_) {
 	process_activate (thread_current ());
 
 	/* Open executable file. */
-	file = filesys_open (file_name);
+	/* argv[0]만 실제 실행 파일 이름으로 사용한다.
+	 * 예: "echo hello"라면 filesys_open()에는 "echo"만 넘긴다. */
+	file = filesys_open (argv[0]);
 	if (file == NULL) {
-		printf ("load: %s: open failed\n", file_name);
+		printf ("load: %s: open failed\n", argv[0]);
 		goto done;
 	}
 
@@ -414,13 +454,57 @@ load (const char *file_name, struct intr_frame *if_) {
 	/* Start address. */
 	if_->rip = ehdr.e_entry;
 
-	/* TODO: Your code goes here.
-	 * TODO: Implement argument passing (see project2/argument_passing.html). */
+	/* 5/04:
+	 * 커널에서 전체 command line을 토큰화한 뒤,
+	 * user mode가 커널 주소를 직접 참조하지 않도록
+	 * 문자열들과 argv[] 포인터 배열을 user stack에 다시 구성한다. */
+	/* 각 문자열을 역순으로 user stack에 복사한다.
+	 * rsp를 줄여가며 저장하고, 복사된 문자열의 유저 주소를 argv_addr에 기록한다. */
+	for (i = argc - 1; i >= 0; i--)
+		{
+			size_t len = strlen (argv[i]) + 1;
+			if_->rsp -= len;
+			memcpy ((void *) if_->rsp, argv[i], len);
+			argv_addr[i] = (char *) if_->rsp;
+		}
+
+	//패딩 
+
+	while ((if_->rsp & 0x7) != 0)
+		{
+			if_->rsp -= 1;
+			*(uint8_t *) if_->rsp = 0;
+		}
+
+	/* C 관례에 맞게 마지막 원소 argv[argc]는 NULL로 둔다. */
+	if_->rsp -= sizeof (char *);
+	*(char **) if_->rsp = NULL;
+
+	/* 문자열의 유저 주소들을 다시 역순으로 push해서
+	 * 실제 argv[] 포인터 배열을 user stack 안에 만든다. */
+	for (i = argc - 1; i >= 0; i--)
+		{
+			if_->rsp -= sizeof (char *);
+			*(char **) if_->rsp = argv_addr[i];
+		}
+
+	/* x86-64 호출 규약에 맞게
+	 * rdi에는 argc, rsi에는 argv 배열 시작 주소를 전달한다. */
+	if_->R.rsi = if_->rsp;
+	if_->R.rdi = argc;
+
+	/* 유저 코드 진입 직후의 스택 모양을 맞추기 위해
+	 * 가짜 return address를 하나 더 넣어둔다. */
+	if_->rsp -= sizeof (void *);
+	*(void **) if_->rsp = NULL;
 
 	success = true;
 
 done:
 	/* We arrive here whether the load is successful or not. */
+	if (cmd_line != NULL)
+		palloc_free_page (cmd_line);
+
 	file_close (file);
 	return success;
 }
@@ -548,6 +632,9 @@ setup_stack (struct intr_frame *if_) {
 		else
 			palloc_free_page (kpage);
 	}
+	/* TODO: Project 2 (args-none): after mapping the stack page,
+	 * TODO: leave rsp at USER_STACK here and push argc/argv later
+	 * TODO: in load() once the command line has been tokenized. */
 	return success;
 }
 
