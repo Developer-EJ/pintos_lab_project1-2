@@ -11,6 +11,14 @@
 void syscall_entry(void);
 void syscall_handler(struct intr_frame *);
 
+// 시스템 콜 메서드 선언
+int write(int fd, const void *buffer, unsigned size);
+void exit(int status);
+void halt(void);
+bool create(const char *file, unsigned initial_size);
+bool remove(const char *file);
+int open(const char *file);
+
 /* System call.
  *
  * Previously system call services was handled by the interrupt handler
@@ -54,6 +62,12 @@ void syscall_handler(struct intr_frame *f UNUSED)
 	case SYS_HALT:
 		halt();
 		break;
+	case SYS_CREATE:
+		f->R.rax = create(f->R.rdi, f->R.rsi);
+		break;
+	case SYS_REMOVE:
+		f->R.rax = remove(f->R.rdi);
+		break;
 	default:
 		thread_exit();
 	}
@@ -85,4 +99,20 @@ void exit(int status)
 void halt(void)
 {
 	power_off();
+}
+
+bool create(const char *file, unsigned initial_size)
+{
+	if (file == NULL || pml4_get_page(thread_current()->pml4, file) == NULL)
+		exit(-1);
+	return filesys_create(file, initial_size);
+}
+
+bool remove(const char *file)
+{
+	return filesys_remove(file);
+}
+
+int open(const char *file)
+{
 }

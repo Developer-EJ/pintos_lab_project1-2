@@ -101,6 +101,46 @@
       "count": 1,
       "last_used": 1777960533.829,
       "last_action": "run"
+    },
+    "tests/userprog/close-normal": {
+      "count": 2,
+      "last_used": 1777982823.909,
+      "last_action": "run"
+    },
+    "tests/userprog/create-normal": {
+      "count": 3,
+      "last_used": 1777980032.319,
+      "last_action": "run"
+    },
+    "tests/userprog/create-null": {
+      "count": 3,
+      "last_used": 1777982370.106,
+      "last_action": "run"
+    },
+    "tests/userprog/create-bound": {
+      "count": 1,
+      "last_used": 1777980121.278,
+      "last_action": "run"
+    },
+    "tests/userprog/create-empty": {
+      "count": 1,
+      "last_used": 1777980180.856,
+      "last_action": "run"
+    },
+    "tests/userprog/create-bad-ptr": {
+      "count": 2,
+      "last_used": 1777982449.177,
+      "last_action": "run"
+    },
+    "tests/userprog/create-long": {
+      "count": 1,
+      "last_used": 1777980437.043,
+      "last_action": "run"
+    },
+    "tests/userprog/create-exists": {
+      "count": 1,
+      "last_used": 1777980522.411,
+      "last_action": "run"
     }
   }
 }
