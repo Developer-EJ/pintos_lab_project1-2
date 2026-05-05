@@ -3,6 +3,7 @@
 
 /* Copies SIZE bytes from SRC to DST, which must not overlap.
    Returns DST. */
+// 정확히 n바이트 복사
 void *
 memcpy (void *dst_, const void *src_, size_t size) {
 	unsigned char *dst = dst_;
@@ -100,6 +101,7 @@ memchr (const void *block_, int ch_, size_t size) {
    null pointer if C does not appear in STRING.  If C == '\0'
    then returns a pointer to the null terminator at the end of
    STRING. */
+// 앞의 뱐수에 뒤 변수가 있는지 없는지 확인하는 함수 
 char *
 strchr (const char *string, int c_) {
 	char c = c_;
@@ -229,6 +231,8 @@ strtok_r (char *s, const char *delimiters, char **save_ptr) {
 	ASSERT (s != NULL);
 
 	/* Skip any DELIMITERS at our current position. */
+	/* 입력받은 문자열의 처음이 공백인지 아닌지 검사 */
+	/* why? 문자열부터 시작해주기 위해서 검사*/
 	while (strchr (delimiters, *s) != NULL) {
 		/* strchr() will always return nonnull if we're searching
 		   for a null byte, because every string contains a null
@@ -243,8 +247,9 @@ strtok_r (char *s, const char *delimiters, char **save_ptr) {
 
 	/* Skip any non-DELIMITERS up to the end of the string. */
 	token = s;
-	while (strchr (delimiters, *s) == NULL)
-		s++;
+	while (strchr (delimiters, *s) == NULL) s++;
+
+
 	if (*s != '\0') {
 		*s = '\0';
 		*save_ptr = s + 1;
@@ -298,6 +303,7 @@ strnlen (const char *string, size_t maxlen) {
    increasingly popular extension.  See
 http://www.courtesan.com/todd/papers/strlcpy.html for
 information on strlcpy(). */
+// 이 크기의 버퍼에 문자열을 안전하게 복사 
 size_t
 strlcpy (char *dst, const char *src, size_t size) {
 	size_t src_len;

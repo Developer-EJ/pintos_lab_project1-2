@@ -244,7 +244,10 @@ run_task (char **argv) {
 	if (thread_tests){
 		run_test (task);
 	} else {
-		process_wait (process_create_initd (task));
+		// task라는 이름/커맨드라인으로 유저 프로세스를 하나 만들고,
+		// process_create_initd(task)는 새 유저 프로세스의 tid를 반환
+		// 그 tid의 프로세스가 끝날 때까지 기다림
+		process_wait (process_create_initd (task));   
 	}
 #else
 	run_test (task);

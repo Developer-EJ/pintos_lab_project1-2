@@ -25,8 +25,8 @@ struct gp_registers {
 	uint64_t r10;
 	uint64_t r9;
 	uint64_t r8;
-	uint64_t rsi;
-	uint64_t rdi;
+	uint64_t rsi;    // 스택 안에 있는 argv 배열의 시작점 
+	uint64_t rdi;    // argc 값
 	uint64_t rbp;
 	uint64_t rdx;
 	uint64_t rcx;
@@ -52,7 +52,7 @@ struct intr_frame {
 	uint64_t error_code;
 /* Pushed by the CPU.
    These are the interrupted task's saved registers. */
-	uintptr_t rip;
+	uintptr_t rip;       // CPU가 다음에 실행할 명령어의 주소, 실행 파일의 entry point
 	uint16_t cs;
 	uint16_t __pad5;
 	uint32_t __pad6;
