@@ -22,8 +22,10 @@
 #include "vm/vm.h"
 #endif
 
+#define ARGV_MAX 128
+
 static void process_cleanup (void);
-static bool load (const char *file_name, struct intr_frame *if_);
+static bool load (char *file_name, struct intr_frame *if_);
 static void initd (void *f_name);
 static void __do_fork (void *);
 
@@ -162,18 +164,24 @@ error:
  * Returns -1 on fail. */
 int
 process_exec (void *f_name) {
+	// 왜 포인터로 가리키게 할까? 
+	// type을 변환해주기 위해서 
 	char *file_name = f_name;
 	bool success;
 
 	/* We cannot use the intr_frame in the thread structure.
 	 * This is because when current thread rescheduled,
 	 * it stores the execution information to the member. */
+
+	/* _if : 현재 스레드를 유저 프로그램 시작 상태로 만들기 위해서 정보들을 적어놓는 공간 */
 	struct intr_frame _if;
 	_if.ds = _if.es = _if.ss = SEL_UDSEG;
 	_if.cs = SEL_UCSEG;
 	_if.eflags = FLAG_IF | FLAG_MBS;
 
 	/* We first kill the current context */
+	/* 이전 프로그램의 정보가 남아 있을 수 있어서 초기화
+	but! 처음 시작할 때는 이전 프로그램이 없어서 빠져나옴*/
 	process_cleanup ();
 
 	/* And then load the binary */
@@ -204,7 +212,14 @@ process_wait (tid_t child_tid UNUSED) {
 	/* XXX: Hint) The pintos exit if process_wait (initd), we recommend you
 	 * XXX:       to add infinite loop here before
 	 * XXX:       implementing the process_wait. */
-	return -1;
+
+	// for(int i=0; i < 5000000*9; i++);
+
+	// for(;;);
+ 
+	intr_disable();
+	thread_block();
+
 }
 
 /* Exit the process. This function is called by thread_exit (). */
@@ -320,23 +335,59 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
  * Stores the executable's entry point into *RIP
  * and its initial stack pointer into *RSP.
  * Returns true if successful, false otherwise. */
+/* const char *file_nmae = 이 문자열을 수정하지 않겠다
+ * strtok_r은 그 약속을 깨는 함수라서 const 삭제 */
 static bool
-load (const char *file_name, struct intr_frame *if_) {
+load (char *file_name, struct intr_frame *if_) {
 	struct thread *t = thread_current ();
 	struct ELF ehdr;
 	struct file *file = NULL;
 	off_t file_ofs;
 	bool success = false;
 	int i;
+	char *token;
+	char **save_ptr; 
+	char *argv[ARGV_MAX];
+	int argc = 0;
+	size_t size;
+	char *arg_addr[argc];
 
-	/* Allocate and activate page directory. */
+
+	/* save_ptr = 다음 탐색 위치를 담는 char 포인터
+	 * &save_ptr = 그 char 포인터를 수정하기 위해서 넘기는 주소 */
+	/* token이 NULL이 아닐 떄까지 반복 */
+	/* 예외1: argc가 0이면 load 실패 */
+	/* 예외2: argc 크기가 argv를 넘지 않는지 확인 */
+
+	// 1. filename은 argc++ 해줘야 하는가? 안해줘도 되는가? 해야함
+	// 2. strtok_r 할때 file_name이 null이면 어떻게 되는가? 파일열 때 확인 
+	// 3. file_name의 복사본을 만들어야 하는가? 원본을 다시 사용할 일이 없지 않나?
+	// 필요하다. 
+    token = strtok_r(file_name, " ", &save_ptr);
+	argv[0] = token; 
+	argc = 1;
+
+	while(token != NULL) {
+		// 예외2
+		if (argc>=ARGV_MAX) {
+			break;
+		}
+		// 1. 다음 token 생성하기 위해 마지막 세이브 포인터부터 시작
+		token = strtok_r(NULL, " ", &save_ptr);
+		// 2. argv에 넣기
+		argv[argc] = token;
+		// 3. argc 1 증가
+		argc ++;
+		}
+
+	/* Allocate and activate page directory. */ 
 	t->pml4 = pml4_create ();
 	if (t->pml4 == NULL)
 		goto done;
 	process_activate (thread_current ());
 
 	/* Open executable file. */
-	file = filesys_open (file_name);
+	file = filesys_open (argv[0]);
 	if (file == NULL) {
 		printf ("load: %s: open failed\n", file_name);
 		goto done;
@@ -412,10 +463,64 @@ load (const char *file_name, struct intr_frame *if_) {
 		goto done;
 
 	/* Start address. */
+	// if_->rip : 
 	if_->rip = ehdr.e_entry;
 
 	/* TODO: Your code goes here.
 	 * TODO: Implement argument passing (see project2/argument_passing.html). */
+	// rsp 포인터를 옮기면서 argv배열을 커널에서 유저스택에 복사
+
+	// <1> 반복문으로 argv[i] 데이터를 찾고 스택에 역순으로 넣기 + rsp 위치도 같이 변경을 해주기
+	// rsp - argv[0] 공간을 만들어주고 argv[0] 넣기
+	for(int i=argc-1; i>=0 ;i--){
+
+		if_->rsp -= strlen(argv[i])+1;
+		strlcpy((char *)if_->rsp, argv[i], strlen(argv[i]+1));  // (char *) : 명시적 형변환을 해주는 것 why? rsp의 원래 형은 uintptr_t
+		arg_addr[i] = (char *)if_-> rsp 
+
+	}	
+
+    // <2> padding 넣어서 8바이트 정렬 맞추기 -> 필수인가? 문자열 각자 크기가 다르기 떄문에
+	// 왜 8바이트로 정렬하는가? 64아키텍처에서 포인터 크기가 8바이트  
+	// &~0x 비트 연산자 사용 
+
+	// 방법1 : 나머지 이용 = rsp 주소를 8로 나눈 다음 나머지를 빼주기 
+	// why? 스택은 높은 주소에서 낮은 주소로 데이터가 삽입되기 때문
+	// 궁금한 점 : rsp의 포인터는 uintptr_t이니까 remainder도 정수로 줘야 계산할 수 있는 거아닌가?
+	// int remainder = if_->rsp%8;
+	// while(remainder != 0){
+	// 	if_->rsp = if_->rsp - remainder;
+	// }
+
+	// 방법2 : 비트 연산자 이용
+	if_->rsp = (if_->rsp && ~7);
+
+	// <3> null 포인터 넣기 
+	// why? 배열의 끝을 탐색하기 위해서 
+	// memset or 단순 0이라면 메모리 직접 접근, 역참조 
+	if_->rsp -= 8
+	
+
+	// <4> argv 주소 넣기
+	// why? 문자열 크기가 제각각이기 때문에 시작 주소가 필요하다
+	// stack에서 pop을 해도 데이터와 주소가 사라지는 것이 아니라 데이터는 남아 있고 다른 함수가 호출되었을 때 데이터가 덮여진다
+
+
+
+	// <5> rsp를 argv시작 주소로 저장 + rsi포인터 위치
+
+
+
+	// <6> fake return address 0 넣기
+
+
+	
+	// <7> 레지스터 세팅 
+
+
+
+	
+
 
 	success = true;
 
@@ -535,15 +640,21 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 }
 
 /* Create a minimal stack by mapping a zeroed page at the USER_STACK */
+/* intr_frame 포인터를 받아서, 나중에 유저 프로그램이 시작할 때 사용할 rsp 값을 설정하는 함수 */
 static bool
 setup_stack (struct intr_frame *if_) {
 	uint8_t *kpage;
 	bool success = false;
 
+	//kpage : 커널이 물리 페이지를 만질 때 쓰는 가상주소
+	//PAL_USER | PAL_ZERO (페이지 할당 옵션 플래그) : 유저용 페이지를 하나 주고, 깨끗하게 0으로 초기화해서 줘 
+	//PAL_USER : 유저 프로세스용 물리 페이지 풀에서 할당
+	//PAL_ZERO : 할당된 페이지를 0으로 초기화 
 	kpage = palloc_get_page (PAL_USER | PAL_ZERO);
 	if (kpage != NULL) {
 		success = install_page (((uint8_t *) USER_STACK) - PGSIZE, kpage, true);
 		if (success)
+		    // 유저 프로그램을 시작할 때 rsp 레지스터 값을 USER_STACK으로 설정해라 
 			if_->rsp = USER_STACK;
 		else
 			palloc_free_page (kpage);
