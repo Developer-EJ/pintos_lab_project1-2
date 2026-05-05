@@ -476,8 +476,7 @@ load (char *file_name, struct intr_frame *if_) {
 
 		if_->rsp -= strlen(argv[i])+1;
 		strlcpy((char *)if_->rsp, argv[i], strlen(argv[i]+1));  // (char *) : 명시적 형변환을 해주는 것 why? rsp의 원래 형은 uintptr_t
-		arg_addr[i] = (char *)if_-> rsp 
-
+		arg_addr[i] = (char *)if_-> rsp;
 	}	
 
     // <2> padding 넣어서 8바이트 정렬 맞추기 -> 필수인가? 문자열 각자 크기가 다르기 떄문에
@@ -498,28 +497,22 @@ load (char *file_name, struct intr_frame *if_) {
 	// <3> null 포인터 넣기 
 	// why? 배열의 끝을 탐색하기 위해서 
 	// memset or 단순 0이라면 메모리 직접 접근, 역참조 
-	if_->rsp -= 8
+	if_->rsp -= sizeof(char *);
+	*(uintptr_t *)if_->rsp = 0;
 	
-
 	// <4> argv 주소 넣기
 	// why? 문자열 크기가 제각각이기 때문에 시작 주소가 필요하다
 	// stack에서 pop을 해도 데이터와 주소가 사라지는 것이 아니라 데이터는 남아 있고 다른 함수가 호출되었을 때 데이터가 덮여진다
+	if_->rsp -= argc*sizeof(char *);
+	*(uintptr_t *)if_->rsp = arg_addr;
 
+	// <5> fake return address 0 넣기
+	if_->rsp -= sizeof(void *);
+	*(uintptr_t *)if_->rsp = 0; 
 
-
-	// <5> rsp를 argv시작 주소로 저장 + rsi포인터 위치
-
-
-
-	// <6> fake return address 0 넣기
-
-
-	
-	// <7> 레지스터 세팅 
-
-
-
-	
+	// <6> 레지스터 세팅 
+	if_->R.rsi = if_->rsp;
+	if_->R.rdi = argc;
 
 
 	success = true;
