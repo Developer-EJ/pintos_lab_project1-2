@@ -453,11 +453,7 @@ load (const char *file_name, struct intr_frame *if_) {
 	if_->R.rdi = count; //argc
 
 	//word-align 
-	//비트 연산자로 고치기
-	while (if_->rsp % 8 != 0) {
-    	if_->rsp--;
-    	memset((void *) if_->rsp, 0, 1);
-	}
+	if_->rsp = if_->rsp & ~7;
 
 	size_t p_size = sizeof(char *);
 	//마지막 확인용 0 넣기
