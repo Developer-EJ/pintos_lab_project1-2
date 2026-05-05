@@ -10,6 +10,7 @@
 
 void syscall_entry (void);
 void syscall_handler (struct intr_frame *);
+void system_write(struct intr_frame *f);
 
 /* System call.
  *
@@ -39,8 +40,52 @@ syscall_init (void) {
 
 /* The main system call interface */
 void
-syscall_handler (struct intr_frame *f UNUSED) {
+syscall_handler (struct intr_frame *f) {
 	// TODO: Your implementation goes here.
-	printf ("system call!\n");
-	thread_exit ();
+	switch(f->R.rax) {
+		case SYS_HALT:                   /* Halt the operating system. */
+			break;		
+		case SYS_EXIT:                   /* Terminate this process. */
+			thread_exit();
+			break;
+		case SYS_FORK:                   /* Clone current process. */
+			break;
+		case SYS_EXEC:                   /* Switch current process. */
+			break;
+		case SYS_WAIT:                   /* Wait for a child process to die. */
+			break;
+		case SYS_CREATE:                 /* Create a file. */
+			break;
+		case SYS_REMOVE:                 /* Delete a file. */
+			break;
+		case SYS_OPEN:	                 /* Open a file. */
+			break;
+		case SYS_FILESIZE:               /* Obtain a file's size. */
+			break;
+		case SYS_READ:                   /* Read from a file. */
+			break;
+		case SYS_WRITE:                  /* Write to a file. */
+			f->R.rax = write(f->R.rdi, f->R.rsi, f->R.rdx);
+			break;
+		case SYS_SEEK:                   /* Change position in a file. */
+			break;
+		case SYS_TELL:                   /* Report current position in a file. */
+			break;
+		case SYS_CLOSE:                  /* Close a file. */
+			break;
+	}
+}
+
+int write(int fd, const void *buffer, unsigned size) {
+	//write (STDOUT_FILENO, buf, strlen (buf));
+	//f->R.rdi
+	// f->R.rsi
+	// f->R.rdx
+	// f->R.r10
+	
+	if (fd == 1) {
+		putbuf(buffer, size);
+	}
+	
+	return size;
 }

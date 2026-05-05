@@ -49,9 +49,14 @@ process_create_initd (const char *file_name) {
 	if (fn_copy == NULL)
 		return TID_ERROR;
 	strlcpy (fn_copy, file_name, PGSIZE);
+	char a[100];
+	strlcpy (a, file_name, strlen(file_name) +1);
+	char *saveptr;
+	char *pname = NULL;
+	pname = strtok_r(a, " ", &saveptr);
 
 	/* Create a new thread to execute FILE_NAME. */
-	tid = thread_create (file_name, PRI_DEFAULT, initd, fn_copy);
+	tid = thread_create (pname, PRI_DEFAULT, initd, fn_copy);
 	if (tid == TID_ERROR)
 		palloc_free_page (fn_copy);
 	return tid;
@@ -207,10 +212,7 @@ process_wait (tid_t child_tid UNUSED) {
 	 * XXX:       implementing the process_wait. */
 
 	//여기에서 main thread가 멈추지 않도록 해야 해
-	intr_disable();
-	while (true) {
-		thread_block();
-	}
+	thread_sleep(500);
 
 	return -1;
 }
@@ -223,7 +225,8 @@ process_exit (void) {
 	 * TODO: Implement process termination message (see
 	 * TODO: project2/process_termination.html).
 	 * TODO: We recommend you to implement process resource cleanup here. */
-
+	//args-dbl-space: exit(0)
+	printf ("%s: exit(%d)\n", curr->name, 0);
 	process_cleanup ();
 }
 
