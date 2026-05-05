@@ -65,5 +65,42 @@
       "last_used": 1777556465.619,
       "last_action": "run"
     }
+  },
+  "userprog": {
+    "tests/userprog/args-none": {
+      "count": 6,
+      "last_used": 1777958804.245,
+      "last_action": "run"
+    },
+    "tests/userprog/args-single": {
+      "count": 4,
+      "last_used": 1777959646.825,
+      "last_action": "run"
+    },
+    "tests/userprog/args-multiple": {
+      "count": 2,
+      "last_used": 1777959489.454,
+      "last_action": "run"
+    },
+    "tests/userprog/args-many": {
+      "count": 1,
+      "last_used": 1777959596.591,
+      "last_action": "run"
+    },
+    "tests/userprog/args-dbl-space": {
+      "count": 2,
+      "last_used": 1777960387.304,
+      "last_action": "run"
+    },
+    "tests/userprog/exit": {
+      "count": 1,
+      "last_used": 1777960211.578,
+      "last_action": "run"
+    },
+    "tests/userprog/halt": {
+      "count": 1,
+      "last_used": 1777960533.829,
+      "last_action": "run"
+    }
   }
 }
