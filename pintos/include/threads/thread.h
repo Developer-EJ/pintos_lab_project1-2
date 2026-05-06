@@ -106,6 +106,13 @@ struct thread
 	uint64_t *pml4; /* Page map level 4 */
 	// exit code
 	int exit_code;
+	/* TODO: Add per-process syscall state here as project 2 grows:
+	 * next fd, fd table/list, and parent-child wait metadata.
+	 */
+	/* Owned by thread.c. */
+	struct intr_frame tf; /* Information for switching */
+
+	
 #endif
 #ifdef VM
 	/* Table for whole virtual memory owned by thread. */

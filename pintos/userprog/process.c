@@ -26,6 +26,10 @@ static void process_cleanup(void);
 static bool load(const char *file_name, struct intr_frame *if_);
 static void initd(void *f_name);
 static void __do_fork(void *);
+/* TODO (Later phases)
+ * After syscall basics settle, exec/wait/fork synchronization work will
+ * build on top of the process lifecycle paths in this file.
+ */
 // file_name 파싱 함수
 static int parse_filename(char *file_name, char **argv);
 // user_stack에 데이터/주소를 push하는 함수
@@ -299,6 +303,9 @@ void process_exit(void)
 	 * TODO: Implement process termination message (see
 	 * TODO: project2/process_termination.html).
 	 * TODO: We recommend you to implement process resource cleanup here. */
+	/* TODO: Keep this aligned with SYS_EXIT handling so exit messages and
+	 * stored status are managed in one consistent place.
+	 */
 	printf("%s: exit(%d)\n", curr->name, curr->exit_code);
 	process_cleanup();
 }
@@ -456,6 +463,7 @@ load(const char *file_name, struct intr_frame *if_)
 		switch (phdr.p_type)
 		{
 		case PT_NULL:
+			
 		case PT_NOTE:
 		case PT_PHDR:
 		case PT_STACK:
