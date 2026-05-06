@@ -68,28 +68,78 @@
   },
   "userprog": {
     "tests/userprog/args-none": {
-      "count": 5,
-      "last_used": 1777998132.063,
-      "last_action": "run"
-    },
-    "tests/userprog/args-multiple": {
-      "count": 4,
-      "last_used": 1777997860.343,
+      "count": 6,
+      "last_used": 1777958804.245,
       "last_action": "run"
     },
     "tests/userprog/args-single": {
-      "count": 1,
-      "last_used": 1777997880.023,
+      "count": 4,
+      "last_used": 1777959646.825,
+      "last_action": "run"
+    },
+    "tests/userprog/args-multiple": {
+      "count": 2,
+      "last_used": 1777959489.454,
       "last_action": "run"
     },
     "tests/userprog/args-many": {
       "count": 1,
-      "last_used": 1777997906.842,
+      "last_used": 1777959596.591,
       "last_action": "run"
     },
     "tests/userprog/args-dbl-space": {
+      "count": 2,
+      "last_used": 1777960387.304,
+      "last_action": "run"
+    },
+    "tests/userprog/exit": {
       "count": 1,
-      "last_used": 1777997919.474,
+      "last_used": 1777960211.578,
+      "last_action": "run"
+    },
+    "tests/userprog/halt": {
+      "count": 1,
+      "last_used": 1777960533.829,
+      "last_action": "run"
+    },
+    "tests/userprog/close-normal": {
+      "count": 2,
+      "last_used": 1777982823.909,
+      "last_action": "run"
+    },
+    "tests/userprog/create-normal": {
+      "count": 3,
+      "last_used": 1777980032.319,
+      "last_action": "run"
+    },
+    "tests/userprog/create-null": {
+      "count": 3,
+      "last_used": 1777982370.106,
+      "last_action": "run"
+    },
+    "tests/userprog/create-bound": {
+      "count": 1,
+      "last_used": 1777980121.278,
+      "last_action": "run"
+    },
+    "tests/userprog/create-empty": {
+      "count": 1,
+      "last_used": 1777980180.856,
+      "last_action": "run"
+    },
+    "tests/userprog/create-bad-ptr": {
+      "count": 2,
+      "last_used": 1777982449.177,
+      "last_action": "run"
+    },
+    "tests/userprog/create-long": {
+      "count": 1,
+      "last_used": 1777980437.043,
+      "last_action": "run"
+    },
+    "tests/userprog/create-exists": {
+      "count": 1,
+      "last_used": 1777980522.411,
       "last_action": "run"
     }
   }
