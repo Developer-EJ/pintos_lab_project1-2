@@ -51,9 +51,16 @@ process_create_initd (const char *file_name) {
 	if (fn_copy == NULL)
 		return TID_ERROR;
 	strlcpy (fn_copy, file_name, PGSIZE);
+	//프로세스 이름 파싱해서 thread_cread에 넣어주기
+	// char *save_ptr = NULL;
+	// strtok_r(fn_copy, " ", &save_ptr);
+	char a[ARGV_MAX];
+	char *saveptr;
+	strlcpy(a, file_name, strlen(file_name)+1);
+	strtok_r(a, " ", &saveptr);
 
 	/* Create a new thread to execute FILE_NAME. */
-	tid = thread_create (file_name, PRI_DEFAULT, initd, fn_copy);
+	tid = thread_create (a, PRI_DEFAULT, initd, fn_copy);
 	if (tid == TID_ERROR)
 		palloc_free_page (fn_copy);
 	return tid;
@@ -217,8 +224,10 @@ process_wait (tid_t child_tid UNUSED) {
 
 	// for(;;);
  
-	intr_disable();
-	thread_block();
+	// intr_disable();
+	// thread_block();
+
+	thread_sleep(500);
 
 }
 
@@ -230,6 +239,7 @@ process_exit (void) {
 	 * TODO: Implement process termination message (see
 	 * TODO: project2/process_termination.html).
 	 * TODO: We recommend you to implement process resource cleanup here. */
+	printf ("%s: exit(%d)\n", thread_current()->name, 0);
 
 	process_cleanup ();
 }
@@ -346,11 +356,12 @@ load (char *file_name, struct intr_frame *if_) {
 	bool success = false;
 	int i;
 	char *token;
-	char **save_ptr; 
+	char *save_ptr; 
 	char *argv[ARGV_MAX];
 	int argc = 0;
 	size_t size;
-	char *arg_addr[argc];
+	uintptr_t *arg_addr[ARGV_MAX];
+	uintptr_t temp;
 
 
 	/* save_ptr = 다음 탐색 위치를 담는 char 포인터
@@ -364,20 +375,18 @@ load (char *file_name, struct intr_frame *if_) {
 	// 3. file_name의 복사본을 만들어야 하는가? 원본을 다시 사용할 일이 없지 않나?
 	// 필요하다. 
     token = strtok_r(file_name, " ", &save_ptr);
-	argv[0] = token; 
-	argc = 1;
 
 	while(token != NULL) {
 		// 예외2
 		if (argc>=ARGV_MAX) {
 			break;
 		}
-		// 1. 다음 token 생성하기 위해 마지막 세이브 포인터부터 시작
-		token = strtok_r(NULL, " ", &save_ptr);
-		// 2. argv에 넣기
+		// 1. argv에 토큰 저장
 		argv[argc] = token;
-		// 3. argc 1 증가
+		// 2. argc 1 증가
 		argc ++;
+		// 3. 다음 token 생성하기 위해 마지막 세이브 포인터부터 시작
+		token = strtok_r(NULL, " ", &save_ptr);
 		}
 
 	/* Allocate and activate page directory. */ 
@@ -475,7 +484,7 @@ load (char *file_name, struct intr_frame *if_) {
 	for(int i=argc-1; i>=0 ;i--){
 
 		if_->rsp -= strlen(argv[i])+1;
-		strlcpy((char *)if_->rsp, argv[i], strlen(argv[i]+1));  // (char *) : 명시적 형변환을 해주는 것 why? rsp의 원래 형은 uintptr_t
+		strlcpy((char *)if_->rsp, argv[i], strlen(argv[i])+1);  // (char *) : 명시적 형변환을 해주는 것 why? rsp의 원래 형은 uintptr_t
 		arg_addr[i] = (char *)if_-> rsp;
 	}	
 
@@ -492,7 +501,7 @@ load (char *file_name, struct intr_frame *if_) {
 	// }
 
 	// 방법2 : 비트 연산자 이용
-	if_->rsp = (if_->rsp && ~7);
+	if_->rsp = (if_->rsp & ~7);
 
 	// <3> null 포인터 넣기 
 	// why? 배열의 끝을 탐색하기 위해서 
@@ -503,17 +512,20 @@ load (char *file_name, struct intr_frame *if_) {
 	// <4> argv 주소 넣기
 	// why? 문자열 크기가 제각각이기 때문에 시작 주소가 필요하다
 	// stack에서 pop을 해도 데이터와 주소가 사라지는 것이 아니라 데이터는 남아 있고 다른 함수가 호출되었을 때 데이터가 덮여진다
-	if_->rsp -= argc*sizeof(char *);
-	*(uintptr_t *)if_->rsp = arg_addr;
+	for(int i =argc-1; i>=0; i--){
+		if_->rsp -= sizeof(char *);
+	    *(uintptr_t *)if_->rsp = arg_addr[i];
+	}
+
+	temp = if_->rsp;
 
 	// <5> fake return address 0 넣기
 	if_->rsp -= sizeof(void *);
 	*(uintptr_t *)if_->rsp = 0; 
 
 	// <6> 레지스터 세팅 
-	if_->R.rsi = if_->rsp;
+	if_->R.rsi = temp;
 	if_->R.rdi = argc;
-
 
 	success = true;
 
