@@ -512,6 +512,12 @@ init_thread(struct thread *t, const char *name, int priority)
 
 	t->waiting_lock = NULL;
 	list_init(&t->donate_threads);
+	/* TODO: Project 2 (args-none): initialize process bookkeeping
+	 * TODO: fields here after you add them to struct thread*/
+
+#ifdef USERPROG
+	t->exit_status = 0;
+#endif
 }
 
 /* Chooses and returns the next thread to be scheduled.  Should
