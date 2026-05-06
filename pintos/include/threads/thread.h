@@ -18,6 +18,12 @@ enum thread_status
 	THREAD_DYING	/* About to be destroyed. */
 };
 
+struct fd_elem {
+	int fd;
+	struct file *file;
+	struct list_elem elem;
+};
+
 /* Thread identifier type.
    You can redefine this to whatever type you like. */
 typedef int tid_t;
@@ -101,6 +107,7 @@ struct thread
 	struct list_elem elem;				  /* List element. */
 	struct list_elem donate_threads_elem; // donate_threads 리스트에 들어갈 때 쓰는 노드
 
+	struct list fd_list;				// 스레드별 fd를 담는 fd_list
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
 	uint64_t *pml4; /* Page map level 4 */

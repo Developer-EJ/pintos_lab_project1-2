@@ -141,6 +141,31 @@
       "count": 1,
       "last_used": 1777980522.411,
       "last_action": "run"
+    },
+    "tests/userprog/open-normal": {
+      "count": 2,
+      "last_used": 1778084807.608,
+      "last_action": "run"
+    },
+    "tests/userprog/open-boundary": {
+      "count": 1,
+      "last_used": 1778084818.174,
+      "last_action": "run"
+    },
+    "tests/userprog/open-null": {
+      "count": 1,
+      "last_used": 1778084827.088,
+      "last_action": "run"
+    },
+    "tests/userprog/open-bad-ptr": {
+      "count": 1,
+      "last_used": 1778084835.939,
+      "last_action": "run"
+    },
+    "tests/userprog/open-twice": {
+      "count": 1,
+      "last_used": 1778084840.476,
+      "last_action": "run"
     }
   }
 }

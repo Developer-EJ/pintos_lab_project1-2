@@ -512,6 +512,7 @@ init_thread(struct thread *t, const char *name, int priority)
 
 	t->waiting_lock = NULL;
 	list_init(&t->donate_threads);
+	list_init(&t->fd_list);
 }
 
 /* Chooses and returns the next thread to be scheduled.  Should

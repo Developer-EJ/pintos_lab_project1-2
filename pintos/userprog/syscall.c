@@ -54,7 +54,7 @@ void syscall_handler(struct intr_frame *f UNUSED)
 	case SYS_WRITE:
 		// 반환값이 있는 시스템콜은 다시 rax에 저장
 		// 일단 write가 구현중이므로 터미널 출력으로 고정
-		f->R.rax = write(1, (void *)f->R.rsi, f->R.rdx);
+		f->R.rax = write(f->R.rdi, (void *)f->R.rsi, f->R.rdx);
 		break;
 	case SYS_EXIT:
 		exit(f->R.rdi);
@@ -67,6 +67,9 @@ void syscall_handler(struct intr_frame *f UNUSED)
 		break;
 	case SYS_REMOVE:
 		f->R.rax = remove(f->R.rdi);
+		break;
+	case SYS_OPEN:
+		f->R.rax = open(f->R.rdi);
 		break;
 	default:
 		thread_exit();
@@ -101,12 +104,13 @@ void halt(void)
 	power_off();
 }
 
-bool create(const char *file, unsigned initial_size)
-{
-	if (file == NULL || pml4_get_page(thread_current()->pml4, file) == NULL)
-		exit(-1);
-	return filesys_create(file, initial_size);
-}
+//은재님 create
+// bool create(const char *file, unsigned initial_size)
+// {
+// 	if (file == NULL || pml4_get_page(thread_current()->pml4, file) == NULL)
+// 		exit(-1);
+// 	return filesys_create(file, initial_size);
+// }
 
 bool remove(const char *file)
 {
@@ -115,4 +119,51 @@ bool remove(const char *file)
 
 int open(const char *file)
 {
+	/*	struct fd_elem {
+			int fd;
+			struct file *file;
+			struct list_elem elem;
+		};	*/
+	int fd = -1;
+	struct thread *curr = thread_current();
+
+	//유효한지는 아직 검사 안함, NULL인지만 체크
+	if (filesys_open(file) != NULL) {
+		/*파일을 오픈 한 다음에 thread_current()의 list에 넣어주어야 함
+			0. fd_list로 fd 계산
+			1. fd_elem 만들기	
+			2. fd_list에 넣기
+			3. fd_return
+		*/
+		if (list_empty(&curr->fd_list)) 
+			fd = 2;
+		else
+			fd = (int)list_size(&curr->fd_list) + 2;
+
+		struct fd_elem *fe = malloc(sizeof(struct fd_elem));
+		fe->fd = fd;
+		fe->file = file;
+		list_push_back(&curr->fd_list, &fe->elem);
+	}
+
+	return fd;
+}
+
+bool create (const char *file, unsigned initial_size) {
+	//초기 크기가 바이트인 새 파일 생성.
+	bool result = false;
+
+	if (file == NULL || initial_size < 0) {
+		exit(-1);
+	}
+	
+	result = filesys_create(file, initial_size);
+	return result;
+}
+
+bool if_user_vaddr(const char *file) {
+	bool result = false;
+
+	
+	return result;
 }
