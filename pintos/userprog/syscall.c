@@ -119,11 +119,8 @@ bool remove(const char *file)
 
 int open(const char *file)
 {
-	/*	struct fd_elem {
-			int fd;
-			struct file *file;
-			struct list_elem elem;
-		};	*/
+	if ( file == NULL) exit(-1);
+	
 	int fd = -1;
 	struct thread *curr = thread_current();
 

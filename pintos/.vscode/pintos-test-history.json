@@ -153,13 +153,13 @@
       "last_action": "run"
     },
     "tests/userprog/open-null": {
-      "count": 1,
-      "last_used": 1778084827.088,
+      "count": 3,
+      "last_used": 1778085340.84,
       "last_action": "run"
     },
     "tests/userprog/open-bad-ptr": {
-      "count": 1,
-      "last_used": 1778084835.939,
+      "count": 2,
+      "last_used": 1778085318.297,
       "last_action": "run"
     },
     "tests/userprog/open-twice": {
