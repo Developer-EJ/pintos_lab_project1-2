@@ -159,8 +159,8 @@ bool create (const char *file, unsigned initial_size) {
 }
 
 bool if_user_vaddr(const char *file) {
-	bool result = false;
-
-	
-	return result;
+	if (file == NULL) exit(-1);
+	if (file == NULL) exit(-1);
+	if (file == NULL) exit(-1);
+	return true;
 }

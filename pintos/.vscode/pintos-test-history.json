@@ -73,8 +73,8 @@
       "last_action": "run"
     },
     "tests/userprog/args-single": {
-      "count": 4,
-      "last_used": 1777959646.825,
+      "count": 5,
+      "last_used": 1778091250.305,
       "last_action": "run"
     },
     "tests/userprog/args-multiple": {
