@@ -54,15 +54,19 @@ void syscall_init(void)
 }
 
 /* The main system call interface */
+static void check_address(const void *addr)
+{
+	if (addr == NULL || !is_user_vaddr(addr) || pml4_get_page(thread_current()->pml4, addr) == NULL)
+		exit(-1);
+}
+
 void syscall_handler(struct intr_frame *f UNUSED)
 {
 	// TODO: Your implementation goes here.
 	switch (f->R.rax)
 	{
 	case SYS_WRITE:
-		// 반환값이 있는 시스템콜은 다시 rax에 저장
-		// 일단 write가 구현중이므로 터미널 출력으로 고정
-		f->R.rax = write(1, (void *)f->R.rsi, f->R.rdx);
+		f->R.rax = write(f->R.rdi, (void *)f->R.rsi, f->R.rdx);
 		break;
 	case SYS_EXIT:
 		exit(f->R.rdi);
@@ -95,18 +99,22 @@ void syscall_handler(struct intr_frame *f UNUSED)
 
 int write(int fd, const void *buffer, unsigned size)
 {
+	check_address(buffer);
+
 	if (fd == 1)
 	{
 		putbuf(buffer, size);
 		return size;
 	}
 
-	// 일단 argu pass 구현하고 다음에..
-	// // fd를 통해 파일 객체 가져오기
-	// struct file *file =
-	// 	if (file == NULL) return -1;
+	if (fd < 2 || fd >= 128)
+		return -1;
 
-	// return file_write(file, buffer, size);
+	struct file *file = thread_current()->fd_table[fd];
+	if (file == NULL)
+		return -1;
+
+	return file_write(file, buffer, size);
 }
 
 void exit(int status)
@@ -160,25 +168,23 @@ int open(const char *file)
 
 int read(int fd, void *buffer, unsigned size)
 {
-	// 키보드에서 입력 읽기
+	check_address(buffer);
+
 	if (fd == 0)
 	{
-		for (int i = 0; i < size; i++)
-		{
+		for (unsigned i = 0; i < size; i++)
 			((uint8_t *)buffer)[i] = input_getc();
-		}
 		return size;
 	}
-	// 파일에서 읽기
-	else if (fd >= 2)
-	{
-		struct file *file = thread_current()->fd_table[fd];
-		if (file == NULL)
-			return -1;
-		return file_read(file, buffer, size);
-	}
-	else
+
+	if (fd < 2 || fd >= 128)
 		return -1;
+
+	struct file *file = thread_current()->fd_table[fd];
+	if (file == NULL)
+		return -1;
+
+	return file_read(file, buffer, size);
 }
 
 void close(int fd)

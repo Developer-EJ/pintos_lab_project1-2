@@ -4,5 +4,7 @@
 *.h text eol=lf
 *.md text eol=lf
 *.py text eol=lf
+*.ck text eol=lf
+*.inc text eol=lf
 Makefile* text eol=lf
 *.sh text eol=lf
