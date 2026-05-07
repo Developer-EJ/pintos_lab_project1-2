@@ -106,6 +106,9 @@ struct thread
 	uint64_t *pml4; /* Page map level 4 */
 	// exit code
 	int exit_code;
+	// fd 테이블
+	struct file *fd_table[128];
+
 #endif
 #ifdef VM
 	/* Table for whole virtual memory owned by thread. */

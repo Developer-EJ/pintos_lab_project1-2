@@ -103,13 +103,13 @@
       "last_action": "run"
     },
     "tests/userprog/close-normal": {
-      "count": 2,
-      "last_used": 1777982823.909,
+      "count": 7,
+      "last_used": 1778069543.116,
       "last_action": "run"
     },
     "tests/userprog/create-normal": {
-      "count": 3,
-      "last_used": 1777980032.319,
+      "count": 4,
+      "last_used": 1778050702.021,
       "last_action": "run"
     },
     "tests/userprog/create-null": {
@@ -140,6 +140,51 @@
     "tests/userprog/create-exists": {
       "count": 1,
       "last_used": 1777980522.411,
+      "last_action": "run"
+    },
+    "tests/userprog/open-normal": {
+      "count": 3,
+      "last_used": 1778035507.162,
+      "last_action": "run"
+    },
+    "tests/userprog/open-missing": {
+      "count": 5,
+      "last_used": 1778071853.668,
+      "last_action": "run"
+    },
+    "tests/userprog/open-twice": {
+      "count": 1,
+      "last_used": 1778035574.577,
+      "last_action": "run"
+    },
+    "tests/userprog/open-boundary": {
+      "count": 1,
+      "last_used": 1778035744.433,
+      "last_action": "run"
+    },
+    "tests/userprog/open-empty": {
+      "count": 3,
+      "last_used": 1778071809.236,
+      "last_action": "run"
+    },
+    "tests/userprog/open-null": {
+      "count": 2,
+      "last_used": 1778045283.873,
+      "last_action": "run"
+    },
+    "tests/userprog/open-bad-ptr": {
+      "count": 9,
+      "last_used": 1778087945.613,
+      "last_action": "run"
+    },
+    "tests/userprog/read-normal": {
+      "count": 4,
+      "last_used": 1778071996.281,
+      "last_action": "run"
+    },
+    "tests/userprog/close-twice": {
+      "count": 1,
+      "last_used": 1778069619.114,
       "last_action": "run"
     }
   }
